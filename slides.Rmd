@@ -845,7 +845,7 @@ class: inverse middle
 
 http://brolgar.njtierney.com
 
-**br**owse **o**ver **l**ongitudinal data **g**raphically and **a**nalytically in **R**
+**br**owse **o**ver **l**ongitudinal data <br> **g**raphically and **a**nalytically in **R**
 
 .footnote[Image source: [wikicommons](https://commons.wikimedia.org/wiki/File:Brolga_(35984742503).jpg)]
 ---
