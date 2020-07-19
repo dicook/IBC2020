@@ -74,7 +74,7 @@ background-size: 50%
 ---
 class: inverse
 
-<iframe src="http://ggobi.org/book/chap-misc/Longitudinal.mov" width="750" height="563" frameborder="0"> Exploring Longitudinal Data </iframe>
+<iframe src="http://ggobi.org/book/chap-misc/Longitudinal.mov" width="750" height="563" frameborder="0" allowfullscreen></iframe>
 
 .footnote[[Exploring Longitudinal Data with GGobi](http://ggobi.org/book/chap-misc/Longitudinal.mov) by Di Cook on [GGobi website](http://ggobi.org)]
 
@@ -837,13 +837,15 @@ background-size: 100%
 
 ---
 background-image: \url(https://upload.wikimedia.org/wikipedia/commons/9/99/Brolga_%2835984742503%29.jpg)
-background-size: 25%
+background-size: 40%
 background-position: 99% 99%
-class: inverse middle
+class: inverse 
 
-## Read more about the `brolgar` package at 
+### Read more about the `brolgar` package at 
 
 # http://brolgar.njtierney.com
+
+<br>
 
 **br**owse **o**ver **l**ongitudinal data <br> **g**raphically and **a**nalytically in **R**
 
