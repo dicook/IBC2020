@@ -1,0 +1,866 @@
+---
+title: "The paradox of the positive: exploratory tools for visualising the individuals in (multivariate) longitudinal data"
+author: "Di Cook"
+date: 
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["xaringan-themer.css", "mytheme2.css"]
+    nature:
+      ratio: '16:9'
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    seal: FALSE
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  error = FALSE, 
+  echo = FALSE,
+  fig.retina = 3,
+  fig.width = 4,
+  fig.height = 4,
+  out.width = "100%")
+```
+
+```{r load libraries, include=FALSE}
+library(tidyverse)
+library(xaringanthemer)
+library(RColorBrewer)
+library(ggthemes)
+library(ggrepel)
+library(ggpubr)
+library(knitr)
+library(kableExtra)
+library(brolgar)
+library(lme4)
+# library(palap)  https://github.com/njtierney/palap
+library(modelr)
+library(ochRe)
+```
+
+class: inverse middle
+background-image: url(images/people2.png)
+background-position: 99% 98%
+background-size: 55%
+
+# *The Paradox of the Positive* 
+
+## Exploratory tools for visualising the individuals in (multivariate) longitudinal data
+
+### Di Cook, Monash University <br> .small[Joint with Nick Tierney and Tania Prvan] <br> International Biometrics Conference <br> .tiny[Virtual Learning Series, July 20, 2020]
+
+.tiny[`r anicon::faa("arrow-right", animate="passing")` [https://dicook.org/files/IBC2020/slides.html](https://dicook.org/files/IBC2020/slides.html)]
+<br>
+
+.footnote[Image credit: 2020 Australian Open spectators by Di Cook]
+
+---
+background-image: url(images/singer_willett.png)
+background-size: 50%
+
+.huge[
+`r emo::ji("sunny")`
+]
+
+.footnote[Example from Singer and Willett (2003) Applied Longitudinal Data Analysis: Modeling Change and Event Occurrence]
+
+
+
+---
+class: inverse
+
+<iframe src="http://ggobi.org/book/chap-misc/Longitudinal.mov" width="750" height="563" frameborder="0"> Exploring Longitudinal Data </iframe>
+
+.footnote[[Exploring Longitudinal Data with GGobi](http://ggobi.org/book/chap-misc/Longitudinal.mov) by Di Cook on [GGobi website](http://ggobi.org)]
+
+---
+class: inverse middle
+
+.huge[
+`r emo::ji("cloud_with_rain")`
+]
+
+# Shiver.
+--
+
+<p> The variation from individual to individual is much greater than the overall trend. While there may be an overall trend that matches our common belief, many individuals have a different experience. 
+
+---
+background-image: \url(https://suziegruber.com/wp-content/uploads/2018/06/Frayed-Rope-2-Deposit-web.jpg)
+background-size: cover
+class: inverse center
+
+# A divergence of purpose
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+.pull-left[
+
+Statistics<br> for policy
+]
+
+.pull-right[
+
+Statistics <br> for the public
+
+]
+
+.footnote[Image source: [Suzie Graber]((https://suziegruber.com/wp-content/uploads/2018/06/Frayed-Rope-2-Deposit-web.jpg)]
+<!--
+```{r dichotomy, fig.width=5, fig.height=5, out.width="40%"}
+d <- tibble(x=c(1, 10), y=c(1, 10), label=c("Statistics \n for policy", "Statistics \n for the public") )
+ggplot(d) + geom_point(aes(x=x, y=y)) + 
+  geom_text(aes(x=x, y=y, label=label), nudge_y=c(-1.7, 1.5), size=6) +
+  geom_curve(aes(x=x[1], y=y[1], xend=x[2], yend=y[2]), 
+             curvature=0.8, arrow = arrow(length = unit(0.5,"cm"), ends="both"))  + 
+  xlim(c(-3, 15)) +
+  ylim(c(-3, 15)) +
+  theme_transparent() + 
+  border("black") +
+  coord_equal()
+```
+-->
+
+---
+background-image: \url(https://upload.wikimedia.org/wikipedia/commons/2/21/Frederick_Douglass_by_Samuel_J_Miller%2C_1847-52.png)
+background-size: 15%
+background-position: 100% 0%
+
+# Paradox of the positive
+
+> *Douglass orates that positive statements about American values, such as liberty, citizenship, and freedom, were an offense to the enslaved population of the United States because of their lack of freedom, liberty, and citizenship. As well, Douglass referred not only to the captivity of enslaved people, but to the merciless exploitation and the cruelty and torture that slaves were subjected to in the United States. Rhetoricians R.L. Heath and D. Waymer called this topic the "paradox of the positive" because it highlights how something positive and meant to be positive can also exclude individuals.* 
+.footnote[[Wikipedia: What to a slave is the fourth of July ](https://en.wikipedia.org/wiki/What_to_the_Slave_Is_the_Fourth_of_July%3F)]
+
+---
+
+.pull-left[
+`r anicon::nia("Aside: Should race even be a variable used in analyses?", animate="float", grow=2)`
+]
+
+.pull-right[
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">&quot;First, if racism is a principal factor organizing social life, why not study racism rather than race? Second, why use an unscientific system of classification in scientific research?&quot; AJPH 22 years ago, loud and clear, in plain sight, <a href="https://twitter.com/mindphul?ref_src=twsrc%5Etfw">@mindphul</a> <a href="https://t.co/aLQ5BqquIS">https://t.co/aLQ5BqquIS</a></p>&mdash; Melanie Wall (@mwallbiostat) <a href="https://twitter.com/mwallbiostat/status/1282418693750894594?ref_src=twsrc%5Etfw">July 12, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+]
+
+---
+
+.large[I'm going to talk about]
+
+--
+
+`r anicon::faa("hand-pointer", size=2, speed="slow", animate="float", colour="#75A34D")` .large[.purple[new tools for longitudinal data]]
+
+--
+
+`r anicon::faa("hand-spock", size=2, speed="slow", animate="wrench", colour="#75A34D")` .large[.green[to explore the individuals]]
+
+--
+
+`r anicon::faa("hand-peace", size=2, speed="slow", animate="vertical", colour="#75A34D")` .large[.orange[in the R package `brolgar`.]]
+
+---
+
+# What is the data structure
+
+`brolgar` builds on `tsibble`, by Earo Wang. 
+
+
+```{r data, highlight.output = c(1:2)}
+data(wages)
+wages 
+```
+
+---
+
+# Making spaghetti
+
+```{r}
+invthm <- theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "transparent", colour = NA), 
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA),
+    text = element_text(colour = "#CFA118"),
+    axis.text = element_text(colour = "#CFA118")
+  )
+```
+
+.pull-left[
+```{r spaghetti, echo=TRUE, fig.show = 'hide'}
+wages %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line(alpha=0.3) + invthm
+```
+]
+
+.pull-right[
+```{r ref.label = 'spaghetti', echo = FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+class: inverse middle center
+
+# from a spaghetti mess
+
+<img src="spaghetti_mess.gif" width="640" height="480">
+
+.footnote[Source: giphy]
+---
+class: inverse middle center
+
+# to controlled spaghetti handling
+
+<img src="spaghetti_clean.gif" width="640" height="480">
+
+.footnote[Source: giphy]
+
+---
+class: inverse middle center
+
+# to perfection
+
+<img src="spaghetti_perfect.gif" width="640" height="480">
+
+.footnote[Source: giphy]
+
+---
+# Its not regular
+
+.pull-left[
+
+Using features, compute the number of measurements for each subject
+
+```{r nobs, echo=TRUE, fig.show = 'hide', dev = 'svg', dev.args = list(bg = "transparent")}
+wages %>%
+  features(ln_wages, n_obs) %>% #<<
+  ggplot(aes(x = n_obs)) + 
+  geom_bar() +
+  xlab("Number of observations") +
+  invthm
+```
+]
+
+.pull-right[
+```{r ref.label = 'nobs', echo = FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+
+# We could filter on this
+
+.pull-left[
+```{r show-add-n-obs, echo=TRUE, results='hide'}
+wages <- wages %>% add_n_obs() #<<
+wages %>% 
+  filter(n_obs > 3) %>% #<<
+  select(id, ln_wages, xp, n_obs)
+```
+]
+
+.pull-right[
+```{r ref.label = 'show-add-n-obs', echo=FALSE, highlight.output = 2}
+wages <- wages %>% add_n_obs() 
+wages %>% 
+  filter(n_obs > 3) %>%
+  select(id, ln_wages, xp, n_obs)
+```
+]
+
+---
+# Subjects don't all start at the same time
+
+.pull-left[
+Using features to extract minimum time
+
+```{r start-time, fig.show='hide', echo=TRUE}
+wages %>%
+  features(xp, list(min = min)) %>% #<<
+  ggplot(aes(x = min)) + 
+  geom_histogram(binwidth=0.5) +
+  xlim(c(0, 13)) +
+  xlab("First time in study") + 
+  invthm
+```
+]
+
+.pull-right[
+```{r ref.label = 'start-time', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+
+# There's a range of experience
+
+.pull-left[
+Using features to extract range of time index
+
+```{r wages-xp, fig.show='hide', echo=TRUE}
+wages_xp_range <- wages %>% 
+  features(xp, feat_ranges) #<<
+
+ggplot(wages_xp_range,
+       aes(x = range_diff)) + 
+  geom_histogram() + 
+  xlab("Range of experience") +
+  invthm
+```
+]
+
+.pull-right[
+```{r ref.label = 'wages-xp', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+
+---
+
+# Small spoonfuls of spaghetti
+
+.pull-left[
+Sample some individuals
+
+```{r spoonful, fig.show='hide', echo=TRUE}
+set.seed(20200720)
+wages %>%
+  sample_n_keys(size = 10) %>% #<<
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line() +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+count: false
+# Small spoonfuls of spaghetti
+
+.pull-left[
+Sample some individuals
+
+```{r spoonful2, fig.show='hide', echo=TRUE}
+wages %>%
+  sample_n_keys(size = 10) %>% #<<
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line() +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful2', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+---
+count: false
+
+# Small spoonfuls of spaghetti
+
+.pull-left[
+Sample some individuals
+
+```{r spoonful3, fig.show='hide', echo=TRUE}
+wages %>%
+  sample_n_keys(size = 10) %>% #<<
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line() +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful3', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+# Take a spoonful of different lengths
+
+.pull-left[
+Sample experienced individuals
+
+```{r spoonful_long, fig.show='hide', echo=TRUE}
+wages %>%
+  add_n_obs() %>%
+  filter(n_obs > 7) %>% #<<
+  sample_n_keys(size = 10) %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line()  +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful_long', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+# Take a spoonful of different lengths
+
+.pull-left[
+Sample INexperienced individuals
+
+```{r spoonful_short, fig.show='hide', echo=TRUE}
+wages %>%
+  add_n_obs() %>%
+  filter(n_obs < 5) %>% #<<
+  sample_n_keys(size = 10) %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line()  +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful_short', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+# Take a spoonful of different lengths
+
+.pull-left[
+Sample average experience
+
+```{r spoonful_medium, fig.show='hide', echo=TRUE}
+wages %>%
+  add_n_obs() %>%
+  filter(n_obs > 4, n_obs < 8) %>% #<<
+  sample_n_keys(size = 10) %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line()  +
+  xlim(c(0,13)) + ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+.tiny[Wages conversion 0.5 = $1.65; 4.5 = $90]
+]
+
+.pull-right[
+```{r ref.label = 'spoonful_medium', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+---
+# Also we can 
+
+- `facet_strata`: show the whole pot, neatly separated into equally portioned
+- `facet_sample`: show most of the pot in neatly separated portions
+
+---
+
+```{r fig.width=10, fig.height=6, out.width="100%", echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+wages %>% 
+  filter(n_obs > 1) %>%
+  ggplot(aes(x = xp,
+           y = ln_wages,
+           group = id)) +
+  geom_line() +
+  facet_sample(n_per_facet = 3,
+               n_facets = 20)  +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+---
+# Special features 
+
+Compute tignostics for each subject
+
+- Slope, intercept from simple linear model
+- Variance, standard deviation
+- Jumps, differences
+
+---
+
+# Increasing
+
+.pull-left[
+
+```{r increasing, fig.show='hide', echo=TRUE}
+wages_slope <- wages %>%   
+  add_n_obs() %>%
+  filter(n_obs > 4) %>%
+  key_slope(ln_wages ~ xp) %>% #<<
+  left_join(wages, by = "id") %>%
+  as_tsibble(key = id, index = xp) 
+
+wages_slope %>% 
+  filter(.slope_xp > 0.4) %>% #<<
+  ggplot(aes(x = xp, 
+             y = ln_wages, 
+             group = id)) + 
+  geom_line() +
+  ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+]
+
+.pull-right[
+```{r ref.label = 'increasing', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+# Decreasing 
+
+.pull-left[
+
+```{r decreasing, fig.show='hide', echo=TRUE}
+wages_slope %>% 
+  filter(.slope_xp < (-0.7)) %>% #<<
+  ggplot(aes(x = xp, 
+             y = ln_wages, 
+             group = id)) + 
+  geom_line() +
+  ylim(c(0, 4.5)) +
+  xlab("Years of experience") + 
+  ylab("Log wages") +
+  invthm
+```
+
+]
+
+.pull-right[
+```{r ref.label = 'decreasing', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+```
+]
+
+---
+# A different style of five number summary
+
+Who is average?
+Who is different?
+
+<br>
+
+Find those individuals who are representative of the min, median, maximum, etc of growth, using `keys_near()`
+---
+
+.pull-left[
+
+```{r three_number, fig.show='hide', echo=TRUE}
+wages_threenum <- wages %>%   
+  add_n_obs() %>%
+  filter(n_obs > 4) %>%
+  key_slope(ln_wages ~ xp) %>%
+  keys_near(key = id, #<<
+            var = .slope_xp, #<<
+            funs = l_three_num) %>% #<<
+  left_join(wages, by = "id") %>%
+  as_tsibble(key = id, index = xp) 
+```
+
+]
+
+.pull-right[
+```{r three_number_plot, echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+
+clrs <- c("#BCACDB","#002b36","#686CA9")
+wages_threenum %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id,
+             colour = stat)) + 
+  geom_line() + 
+  ylim(c(0, 4.5)) +
+  scale_colour_manual("", values = clrs) +
+  xlab("Years of experience") + ylab("Log wages") +
+  invthm
+```
+]
+
+---
+
+```{r five_number, echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent"), fig.width=8}
+wages_fivenum <- wages %>%   
+  add_n_obs() %>%
+  filter(n_obs > 4) %>%
+  key_slope(ln_wages ~ xp) %>%
+  keys_near(key = id,
+            var = .slope_xp,
+            funs = l_five_num) %>%
+  left_join(wages, by = "id") %>%
+  as_tsibble(key = id, index = xp) 
+
+wages_fivenum %>%
+  ggplot(aes(x = xp,
+             y = ln_wages,
+             group = id)) + 
+  geom_line() + 
+  ylim(c(0, 4.5)) +
+  facet_wrap(~stat, ncol=5) +
+  xlab("Years of experience") + ylab("Log wages") +
+  invthm
+```
+
+---
+# Sculpting spaghetti
+
+.pull-left[
+
+Mixed effects model, education as fixed effect, subject random effect using slope.
+
+```{r model, fig.show='hide', echo=TRUE}
+wages_fit_int <- 
+  lmer(ln_wages ~ xp + high_grade + #<<
+         (xp |id), data = wages) #<<
+wages_aug <- wages %>%
+  add_predictions(wages_fit_int, 
+                  var = "pred_int") %>%
+  add_residuals(wages_fit_int, 
+                var = "res_int")
+```
+]
+
+.pull-right[
+```{r model_plot, echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent")}
+ggplot(wages_aug,
+       aes(x = xp,
+           y = pred_int,
+           group = id)) + 
+  geom_line(alpha = 0.2) +
+  xlab("Years of experience") + ylab("Log wages") +
+  invthm
+```
+]
+
+---
+# Sample and show the data, too
+
+```{r model-data, echo=TRUE, fig.show='hide'} 
+set.seed(1)
+wages_aug %>% add_n_obs() %>% filter(n_obs > 4) %>%
+  sample_n_keys(size = 12) %>%
+  ggplot(aes(x = xp, y = pred_int, group = id, #<<
+             colour = factor(id))) + 
+  geom_line() + 
+  geom_point(aes(x = xp, y = ln_wages, #<<
+                 colour = factor(id))) + 
+  scale_colour_ochre(palette = "emu_woman_paired") +
+  facet_wrap(~id, ncol=4)  +
+  xlab("Years of experience") + ylab("Log wages") +
+  invthm + 
+  theme(legend.position = "none")
+```
+
+---
+
+```{r ref.label = 'model-data', echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent"), fig.height=3.8, fig.width=6}
+```
+
+---
+
+# Multivariate
+
+```{r echo=FALSE, eval=FALSE}
+wages_mv <- wages %>%
+  mutate(expens = -2*ln_wages + rnorm(length(ln_wages)),
+         savings = 2*(ln_wages^2-1) + 2*(rexp(length(ln_wages))-1)) %>%
+  mutate(rowid = 1:length(ln_wages))
+```
+
+```{r echo=TRUE, eval=FALSE}
+library(tourr)
+wages_mv_df <- wages_mv %>% select(ln_wages, expens, savings, id) %>% as.data.frame()
+wages_12227 <- data.frame(from = 6137:6146, to = 6138:6147) %>% as.matrix()
+wages_735 <- data.frame(from = 408:418, to = 409:419) %>% as.matrix()
+edges <- rbind(wages_12227, wages_735)
+animate_xy(wages_mv_df[,1:3], axes = "bottomleft", col="grey90", 
+           edges = wages_12227)
+animate_xy(wages_mv_df[,1:3], axes = "bottomleft", col="grey90", 
+           edges = wages_735)
+render_gif(wages_mv_df[,1:3], grand_tour(), display_xy(axes = "bottomleft", col="grey90", edges = wages_12227), gif_file="./tour1.gif", 
+           apf=1/15, frames=200)
+render_gif(wages_mv_df[,1:3], grand_tour(), display_xy(axes = "bottomleft", col="grey90", edges = wages_735), gif_file="./tour2.gif", 
+           apf=1/15, frames=200)
+```
+
+---
+
+.pull-left[
+Subject 12227
+<img src="tour1.gif" width="90%">
+]
+--
+
+.pull-left[
+Subject 735
+<img src="tour2.gif" width="90%">
+]
+
+---
+background-image: \url(images/mouldy-spaghetti.jpg)
+background-size: cover
+class: inverse middle center
+
+# I'm sorry about the wages data
+
+.footnote[Image source: [https://www.stayathomemum.com.au](https://www.stayathomemum.com.au/my-lifestyle/mouldy-food-how-far-is-too-far-gone/)]
+---
+
+.pull-left[
+.small[
+- Even though its messy, its too clean
+- Original cohort included 12,686 individuals, but this data has only 888 individuals
+- Process not transparent
+- Demographic groups have very different numbers
+]
+]
+
+.pull-right[
+.small[
+ https://www.nlsinfo.org/content/cohorts/nlsy79/get-data
+
+- I have been trying to refresh the wages data
+- can extract approx 6000 individuals
+- many odd values, like hourly wages > $10,000 per hour
+- different coding of variables from one year to another
+]
+]    
+
+---
+
+
+Example of data issues
+
+```{r bad-data, echo=FALSE, dev = 'svg', dev.args = list(bg = "transparent"), fig.width=6, fig.height=3}
+wages_hgc <- wages %>% 
+  filter(high_grade %in% c(9, 12)) %>%
+  mutate(high_grade = factor(high_grade))
+wages_fit_int <- lmer(ln_wages ~ xp * high_grade +  (xp |id), 
+                      data = wages_hgc)
+wages_aug <- wages_hgc %>%
+  add_predictions(wages_fit_int, var = "pred_int") %>%
+  add_residuals(wages_fit_int, var = "res_int")
+
+ggplot(wages_aug,
+       aes(x = xp,
+           y = pred_int,
+           group = id)) + 
+  geom_line(alpha = 0.4) +
+  facet_wrap(~high_grade, ncol=2) +
+  xlab("Years of experience") + ylab("Log wages") +
+  invthm
+```
+
+---
+class: inverse middle center
+
+# Individual approach in use
+
+---
+background-image: \url(images/NYTimes1.png)
+background-size: 80%
+
+
+.footnote[[NYTimes Coronavirus coverage](https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html)]
+
+---
+background-image: \url(images/NYTimes2.png)
+background-size: 100%
+
+.footnote[[NYTimes Coronavirus coverage](https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html)]
+
+---
+
+--- 
+# What I hope you have heard today
+
+- When the variation is large, we need better methods to summarise the variation
+- We need .orange[more research], and .orange[acceptance], on methods for communicating the individual experience
+- .orange[Statistics needs to address the individual experience], so we can better engage with the public. *I feel this is important for evolving democracy, for literate citizenship. As more tools become readily available, people will do their own analysis*.
+
+---
+background-image: \url(https://upload.wikimedia.org/wikipedia/commons/9/99/Brolga_%2835984742503%29.jpg)
+background-size: 40%
+background-position: 95% 95%
+class: inverse middle
+
+# Read more about the `brolgar` package at 
+
+http://brolgar.njtierney.com
+
+**br**owse **o**ver **l**ongitudinal data **g**raphically and **a**nalytically in **R**
+
+---
+class: inverse middle
+background-image: url(images/people2.png)
+background-position: 99% 1%
+background-size: 35%
+
+# Acknowledgements
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan), with **iris theme** created from [xaringanthemer](https://github.com/gadenbuie/xaringanthemer).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](http://yihui.name/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Slides are available at [https://dicook.org/files/IBC2020/slides.html](https://dicook.org/files/IBC2020/slides.html) and supporting files at [https://github.com/dicook/IBC2020](https://github.com/dicook/IBC2020).
+
+<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+
+.footnote[Image credit: 2020 Australian Open spectators by Di Cook]
