@@ -3,6 +3,8 @@ This repo hosts slides for the keynote talk at IBC 2020 converted into an online
 
 Follow the slides at https://www.dicook.org/files/ibc2020/slides#1
 
+Video of the talk is at https://www.youtube.com/watch?v=AQQth2e67C4 (this was a backup video for the live talk.)
+
 ### These are my favorite resources for learning how to make xaringan slides
 
 - https://arm.rbind.io/slides/xaringan.html
